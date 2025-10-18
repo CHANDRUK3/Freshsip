@@ -25,11 +25,5 @@
       "src": "/(.*)",
       "dest": "/client/dist/$1"
     }
-  ],
-  "functions": {
-    "api/[...path].js": {
-      "maxDuration": 10
-    }
-  },
-  "regions": ["iad1"]
+  ]
 }
