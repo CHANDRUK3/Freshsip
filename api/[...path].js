@@ -45,7 +45,20 @@ async function connectToDatabase() {
 }
 
 app.get('/api', (req, res) => {
-	res.json({ status: 'ok', service: 'FreshSip API' });
+	res.json({ 
+		status: 'ok', 
+		service: 'FreshSip API',
+		timestamp: new Date().toISOString(),
+		environment: process.env.NODE_ENV || 'development'
+	});
+});
+
+app.get('/api/health', (req, res) => {
+	res.json({ 
+		status: 'healthy',
+		database: cachedConnection ? 'connected' : 'disconnected',
+		timestamp: new Date().toISOString()
+	});
 });
 
 app.use('/api/orders', orderRoutes);
@@ -54,6 +67,16 @@ app.use('/api/products', productRoutes);
 
 // Vercel serverless function handler
 export default async function handler(req, res) {
-	await connectToDatabase();
-	return app(req, res);
+	try {
+		await connectToDatabase();
+		return app(req, res);
+	} catch (error) {
+		console.error('Handler error:', error);
+		
+		// Prevent FUNCTION_INVOCATION_FAILED
+		res.status(500).json({ 
+			error: 'Internal server error',
+			message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+		});
+	}
 }
