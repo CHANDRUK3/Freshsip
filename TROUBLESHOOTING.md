@@ -70,6 +70,12 @@ JWT_SECRET=your-super-secure-secret-here
 2. Optimize database queries
 3. Add proper error handling
 
+#### Critical Error Responses:
+- **FUNCTION_INVOCATION_FAILED**: Environment variables missing
+- **DEPLOYMENT_NOT_READY_REDIRECTING**: Wait 2-3 minutes
+- **NO_RESPONSE_FROM_FUNCTION**: Check function logs
+- **ROUTER_CANNOT_MATCH**: Check vercel.json routes
+
 ### 📞 **Getting Help**
 
 For platform-level errors (INTERNAL_*), contact Vercel support.
@@ -78,6 +84,12 @@ For application errors, check:
 2. MongoDB Atlas logs
 3. Browser network tab
 4. Console errors
+
+### 🎯 **Error Code Quick Reference**
+- **403/404**: Routing or permissions issue
+- **500**: Server/database connection problem
+- **502**: Function crash or no response
+- **504**: Timeout (usually database)
 
 ---
 
