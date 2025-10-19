@@ -13,7 +13,13 @@ const app = express();
 // Enhanced CORS configuration for production
 app.use(cors({
 	origin: process.env.NODE_ENV === 'production' 
-		? ['https://freshsip-np5z.vercel.app', 'https://freshsip-jfsd.vercel.app'] // Your actual Vercel domains
+		? [
+			'https://freshsip-np5z.vercel.app', 
+			'https://freshsip-jfsd.vercel.app',
+			'https://freshsippp.vercel.app', // User's current Vercel domain
+			/\.vercel\.app$/, // Allow any Vercel domain
+			/\.onrender\.com$/ // Allow Render domains (for testing)
+		] 
 		: true, // Allow all origins in development
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
