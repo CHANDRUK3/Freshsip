@@ -1,8 +1,12 @@
 // API configuration - Use Render backend in production
 export const API_BASE = (() => {
   // Check for environment variable first (production)
-  if (import.meta.env.VITE_API_BASE) {
-    return import.meta.env.VITE_API_BASE;
+  try {
+    if (import.meta?.env?.VITE_API_BASE) {
+      return import.meta.env.VITE_API_BASE;
+    }
+  } catch (e) {
+    // import.meta not available in Node.js environment
   }
   
   // Development
