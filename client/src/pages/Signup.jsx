@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { setAuth } from '../utils/auth';
 import { Toaster, toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { API_BASE, apiCall } from '../utils/api';
+import { API_BASE } from '../utils/api';
 
 export default function Signup() {
 	const [name, setName] = useState('');
@@ -16,12 +16,30 @@ export default function Signup() {
 	async function handleSignup(e) {
 		e.preventDefault();
 		setLoading(true);
+		
 		try {
-			console.log('Attempting signup with API_BASE:', API_BASE);
-			const data = await apiCall('/api/auth/signup', {
+			console.log('Signup attempt - API_BASE:', API_BASE);
+			console.log('Full URL:', `${API_BASE}/api/auth/signup`);
+			
+			const response = await fetch(`${API_BASE}/api/auth/signup`, {
 				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
 				body: JSON.stringify({ name, email, password, role })
 			});
+			
+			console.log('Response status:', response.status);
+			console.log('Response ok:', response.ok);
+			
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('Response error:', errorText);
+				throw new Error(`HTTP ${response.status}: ${errorText || 'Signup failed'}`);
+			}
+			
+			const data = await response.json();
+			console.log('Signup success:', data);
 			
 			setAuth(data.token, data.user);
 			toast.success('Account created successfully!');
@@ -32,8 +50,8 @@ export default function Signup() {
 				navigate('/shop');
 			}
 		} catch (err) {
-			console.error('Signup error:', err);
-			toast.error(err.message || 'Failed to create account');
+			console.error('Signup error details:', err);
+			toast.error(err.message || 'Failed to create account. Please try again.');
 		} finally {
 			setLoading(false);
 		}

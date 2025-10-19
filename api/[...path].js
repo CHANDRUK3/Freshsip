@@ -72,31 +72,35 @@ app.use('/api/products', productRoutes);
 
 // Vercel serverless function handler
 export default async function handler(req, res) {
-	// Set CORS headers for all requests
+	// Essential CORS headers
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
 	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+	res.setHeader('Access-Control-Allow-Credentials', 'true');
 	
-	// Handle preflight requests
+	// Handle preflight OPTIONS requests
 	if (req.method === 'OPTIONS') {
 		res.status(200).end();
 		return;
 	}
 	
 	try {
-		console.log(`${req.method} ${req.url} - Starting request`);
+		console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+		
+		// Connect to database
 		await connectToDatabase();
-		console.log('Database connected, processing request');
+		
+		// Pass to Express app
 		return app(req, res);
+		
 	} catch (error) {
 		console.error('Handler error:', error);
 		
-		// Always return a proper response to prevent FUNCTION_INVOCATION_FAILED
+		// Ensure we always send a response
 		if (!res.headersSent) {
-			res.status(500).json({ 
-				error: 'Internal server error',
-				message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
-				timestamp: new Date().toISOString()
+			return res.status(500).json({ 
+				error: 'Server error',
+				message: error.message || 'Something went wrong'
 			});
 		}
 	}

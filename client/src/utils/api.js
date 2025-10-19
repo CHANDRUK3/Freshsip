@@ -1,28 +1,21 @@
-// API configuration for both development and production
-const getApiBase = () => {
-  // If VITE_API_BASE is explicitly set, use it
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) {
-    return import.meta.env.VITE_API_BASE;
+// Simplified API configuration
+export const API_BASE = (() => {
+  // Development
+  if (typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1'
+  )) {
+    return 'http://localhost:5000';
   }
   
-  // In browser environment
+  // Production - always use current domain
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    
-    // Development
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:5000';
-    }
-    
-    // Production - use same domain
     return window.location.origin;
   }
   
-  // Server-side fallback
+  // Fallback
   return 'http://localhost:5000';
-};
-
-export const API_BASE = getApiBase();
+})();
 
 // Helper function for API calls with better error handling
 export const apiCall = async (endpoint, options = {}) => {
