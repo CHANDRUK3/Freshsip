@@ -66,9 +66,44 @@ app.get('/api/health', (req, res) => {
 	});
 });
 
+// Test route for debugging
+app.get('/api/test', (req, res) => {
+	res.json({ 
+		message: 'API is working!',
+		timestamp: new Date().toISOString(),
+		environment: process.env.NODE_ENV
+	});
+});
+
+// Test auth route
+app.post('/api/test-auth', (req, res) => {
+	res.json({ 
+		message: 'Auth route is working!',
+		body: req.body,
+		timestamp: new Date().toISOString()
+	});
+});
+
+// Debug middleware
+app.use('/api', (req, res, next) => {
+	console.log(`API Route hit: ${req.method} ${req.url}`);
+	next();
+});
+
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+
+// Catch-all for debugging 404s
+app.use('/api/*', (req, res) => {
+	console.log(`404 - Route not found: ${req.method} ${req.url}`);
+	res.status(404).json({
+		error: 'Route not found',
+		method: req.method,
+		path: req.url,
+		availableRoutes: ['/api/health', '/api/auth/*', '/api/products', '/api/orders/*']
+	});
+});
 
 // Vercel serverless function handler
 export default async function handler(req, res) {
