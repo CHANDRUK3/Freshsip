@@ -5,9 +5,9 @@ const getApiBase = () => {
     return import.meta.env.VITE_API_BASE;
   }
   
-  // In production (when not localhost), use Netlify functions
+  // In production (when not localhost), use the same domain for API
   if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    return `${window.location.origin}/.netlify/functions/api`;
+    return window.location.origin;
   }
   
   // Development fallback
