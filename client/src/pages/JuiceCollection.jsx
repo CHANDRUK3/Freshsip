@@ -3,9 +3,6 @@ import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
 import FiltersBar from '../components/FiltersBar';
 import { Toaster, toast } from 'react-hot-toast';
-
-import { motion } from 'framer-motion';
-import { Toaster, toast } from 'react-hot-toast';
 import { API_BASE } from '../utils/api';
 
 const categories = ['all', 'Juice', 'Premium Juices', 'Coconut Water', 'Combos'];
