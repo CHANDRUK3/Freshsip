@@ -4,7 +4,9 @@ import ProductCard from '../components/ProductCard';
 import FiltersBar from '../components/FiltersBar';
 import { Toaster, toast } from 'react-hot-toast';
 
-const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000';
+import { motion } from 'framer-motion';
+import { Toaster, toast } from 'react-hot-toast';
+import { API_BASE } from '../utils/api';
 
 const categories = ['all', 'Juice', 'Premium Juices', 'Coconut Water', 'Combos'];
 

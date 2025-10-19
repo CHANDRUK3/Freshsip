@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getUser } from '../utils/auth';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || 'http://localhost:5000';
+import { API_BASE } from '../utils/api';
 
 export default function OrderModal({ open, onClose, product }) {
 	const user = getUser();

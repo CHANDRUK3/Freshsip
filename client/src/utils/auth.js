@@ -51,18 +51,17 @@ export function useAuth() {
 		}
 	}, []);
 
-	async function verifyToken() {
+		async function verifyToken() {
 		try {
 			const token = getToken();
 			if (!token) return;
 			
-			const response = await fetch('http://localhost:5000/api/auth/profile', {
+			const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
+			const response = await fetch(`${API_BASE}/api/auth/profile`, {
 				headers: {
 					'Authorization': `Bearer ${token}`
 				}
-			});
-			
-			if (response.ok) {
+			});			if (response.ok) {
 				const userData = await response.json();
 				setUser(userData);
 			} else {
