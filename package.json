@@ -4,11 +4,12 @@
   "description": "FreshSip Juice Store - MERN Stack Application",
   "scripts": {
     "dev": "cd client && npm run dev",
-    "build": "npm install --prefix client && cd client && npm run build",
+    "build": "cd client && npm run build",
     "start": "cd server && npm start",
-    "vercel-build": "npm install --prefix client && cd client && npm run build"
+    "vercel-build": "npm run build"
   },
   "engines": {
-    "node": ">=18.x"
-  }
+    "node": "18.x"
+  },
+  "type": "module"
 }
