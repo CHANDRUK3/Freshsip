@@ -3,8 +3,8 @@ services:
     name: freshsip-backend
     env: node
     plan: free
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: MONGO_URI
         value: mongodb+srv://chandruk26062005_db_user:_Gn8qgUu6EJSF95@freshsip.vv6nn2h.mongodb.net/freshsip
