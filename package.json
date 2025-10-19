@@ -4,7 +4,7 @@
   "description": "FreshSip Juice Store - MERN Stack Application - Production Ready",
   "scripts": {
     "dev": "cd client && npm run dev",
-    "build": "echo 'Backend deployment - no build step needed'",
+    "build": "echo 'Backend deployment - no build step needed' && echo 'Installing server dependencies...' && cd server && npm install",
     "start": "echo 'Starting server from root...' && cd server && npm start",
     "vercel-build": "npm run build",
     "postinstall": "echo 'Installing server dependencies...' && cd server && npm install",
