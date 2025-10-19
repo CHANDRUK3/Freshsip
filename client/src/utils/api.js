@@ -1,5 +1,10 @@
-// Simplified API configuration
+// API configuration - Use Render backend in production
 export const API_BASE = (() => {
+  // Check for environment variable first (production)
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE;
+  }
+  
   // Development
   if (typeof window !== 'undefined' && (
     window.location.hostname === 'localhost' || 
@@ -8,13 +13,8 @@ export const API_BASE = (() => {
     return 'http://localhost:5000';
   }
   
-  // Production - always use current domain
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  
-  // Fallback
-  return 'http://localhost:5000';
+  // Production fallback - Use Render backend
+  return 'https://freshsip.onrender.com';
 })();
 
 // Helper function for API calls with better error handling

@@ -1,4 +1,5 @@
 import React from 'react';
+import { API_BASE } from './api.js';
 
 const TOKEN_KEY = 'freshsip_token';
 const USER_KEY = 'freshsip_user';
@@ -56,7 +57,6 @@ export function useAuth() {
 			const token = getToken();
 			if (!token) return;
 			
-			const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE) || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
 			const response = await fetch(`${API_BASE}/api/auth/profile`, {
 				headers: {
 					'Authorization': `Bearer ${token}`
