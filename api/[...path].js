@@ -26,62 +26,78 @@ const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb+s
 let cachedConnection = null;
 
 async function connectToDatabase() {
-	if (cachedConnection) {
+	// Return cached connection if available
+	if (cachedConnection && mongoose.connection.readyState === 1) {
+		console.log('Using cached MongoDB connection');
 		return cachedConnection;
 	}
 
 	try {
-		console.log('Connecting to MongoDB...');
-		if (!MONGO_URI) {
-			throw new Error('MongoDB URI is not configured');
+		console.log('Establishing MongoDB connection...');
+		
+		// Disconnect if there's a partial connection
+		if (mongoose.connection.readyState !== 0) {
+			await mongoose.disconnect();
 		}
 		
 		const connection = await mongoose.connect(MONGO_URI, {
-			serverSelectionTimeoutMS: 15000,
-			maxPoolSize: 1, // Maintain up to 1 socket connection for serverless
+			serverSelectionTimeoutMS: 8000,
+			connectTimeoutMS: 8000,
+			maxPoolSize: 1,
+			bufferCommands: false,
 		});
-		console.log('MongoDB connected successfully');
+		
 		cachedConnection = connection;
+		console.log('MongoDB connected successfully');
 		return connection;
+		
 	} catch (err) {
-		console.error('Failed to connect to MongoDB:', err);
-		throw new Error('Database connection failed');
+		console.error('MongoDB connection failed:', err);
+		cachedConnection = null;
+		throw new Error(`Database connection failed: ${err.message}`);
 	}
 }
 
+// Simple test route - no database required
 app.get('/api', (req, res) => {
 	res.json({ 
 		status: 'ok', 
 		service: 'FreshSip API',
 		timestamp: new Date().toISOString(),
-		environment: process.env.NODE_ENV || 'development'
+		environment: process.env.NODE_ENV || 'development',
+		mongoUri: MONGO_URI ? 'configured' : 'missing',
+		jwtSecret: process.env.JWT_SECRET ? 'configured' : 'missing'
 	});
 });
 
-app.get('/api/health', (req, res) => {
-	res.json({ 
-		status: 'healthy',
-		database: cachedConnection ? 'connected' : 'disconnected',
-		timestamp: new Date().toISOString()
-	});
+app.get('/api/ping', (req, res) => {
+	res.json({ message: 'pong', timestamp: new Date().toISOString() });
 });
 
-// Test route for debugging
-app.get('/api/test', (req, res) => {
-	res.json({ 
-		message: 'API is working!',
-		timestamp: new Date().toISOString(),
-		environment: process.env.NODE_ENV
-	});
-});
-
-// Test auth route
-app.post('/api/test-auth', (req, res) => {
-	res.json({ 
-		message: 'Auth route is working!',
-		body: req.body,
-		timestamp: new Date().toISOString()
-	});
+app.get('/api/health', async (req, res) => {
+	try {
+		// Test database connection without caching issues
+		if (mongoose.connection.readyState === 1) {
+			res.json({ 
+				status: 'healthy',
+				database: 'connected',
+				timestamp: new Date().toISOString()
+			});
+		} else {
+			res.json({ 
+				status: 'partial',
+				database: 'disconnected',
+				timestamp: new Date().toISOString()
+			});
+		}
+	} catch (error) {
+		res.status(500).json({ 
+			status: 'unhealthy',
+			database: 'error',
+			error: error.message,
+			timestamp: new Date().toISOString()
+		});
+	}
 });
 
 // Debug middleware
@@ -107,23 +123,36 @@ app.use('/api/*', (req, res) => {
 
 // Vercel serverless function handler
 export default async function handler(req, res) {
-	// Essential CORS headers
-	res.setHeader('Access-Control-Allow-Origin', '*');
-	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-	res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-	res.setHeader('Access-Control-Allow-Credentials', 'true');
-	
-	// Handle preflight OPTIONS requests
-	if (req.method === 'OPTIONS') {
-		res.status(200).end();
-		return;
-	}
-	
 	try {
+		// Essential CORS headers
+		res.setHeader('Access-Control-Allow-Origin', '*');
+		res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+		res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+		
+		// Handle preflight OPTIONS requests
+		if (req.method === 'OPTIONS') {
+			return res.status(200).end();
+		}
+		
 		console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
 		
-		// Connect to database
-		await connectToDatabase();
+		// Check environment variables
+		if (!MONGO_URI) {
+			console.error('MONGO_URI not found');
+			return res.status(500).json({ 
+				error: 'Configuration error',
+				message: 'Database configuration missing'
+			});
+		}
+		
+		// Connect to database with timeout
+		const connectPromise = connectToDatabase();
+		const timeoutPromise = new Promise((_, reject) => 
+			setTimeout(() => reject(new Error('Database connection timeout')), 10000)
+		);
+		
+		await Promise.race([connectPromise, timeoutPromise]);
+		console.log('Database connection successful');
 		
 		// Pass to Express app
 		return app(req, res);
@@ -131,12 +160,17 @@ export default async function handler(req, res) {
 	} catch (error) {
 		console.error('Handler error:', error);
 		
-		// Ensure we always send a response
-		if (!res.headersSent) {
-			return res.status(500).json({ 
-				error: 'Server error',
-				message: error.message || 'Something went wrong'
-			});
+		// Always return a response to prevent FUNCTION_INVOCATION_FAILED
+		try {
+			if (!res.headersSent) {
+				return res.status(500).json({ 
+					error: 'Internal server error',
+					message: process.env.NODE_ENV === 'production' ? 'Server error occurred' : error.message,
+					timestamp: new Date().toISOString()
+				});
+			}
+		} catch (responseError) {
+			console.error('Failed to send error response:', responseError);
 		}
 	}
 }
