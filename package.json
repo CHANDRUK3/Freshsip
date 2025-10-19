@@ -4,16 +4,9 @@
   "description": "FreshSip Juice Store - MERN Stack Application - Production Ready",
   "scripts": {
     "dev": "cd client && npm run dev",
-    "build": "cd client && npm install && npm run build",
+    "build": "cd client && npm run build",
     "start": "cd server && npm start",
     "vercel-build": "npm run build"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.5.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "serverless-http": "^3.2.0"
   },
   "engines": {
     "node": "22.x"

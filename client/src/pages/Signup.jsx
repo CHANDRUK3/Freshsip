@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { setAuth } from '../utils/auth';
 import { Toaster, toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { API_BASE } from '../utils/api';
+import { API_BASE, apiCall } from '../utils/api';
 
 export default function Signup() {
 	const [name, setName] = useState('');
@@ -17,22 +17,23 @@ export default function Signup() {
 		e.preventDefault();
 		setLoading(true);
 		try {
-			const res = await fetch(`${API_BASE}/api/auth/signup`, {
+			console.log('Attempting signup with API_BASE:', API_BASE);
+			const data = await apiCall('/api/auth/signup', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ name, email, password, role })
 			});
-			const data = await res.json();
-			if (!res.ok) throw new Error(data.message || 'Signup failed');
+			
 			setAuth(data.token, data.user);
-			toast.success('Account created');
+			toast.success('Account created successfully!');
+			
 			if (data.user.role === 'admin') {
 				navigate('/admin-dashboard');
 			} else {
 				navigate('/shop');
 			}
 		} catch (err) {
-			toast.error(err.message);
+			console.error('Signup error:', err);
+			toast.error(err.message || 'Failed to create account');
 		} finally {
 			setLoading(false);
 		}
