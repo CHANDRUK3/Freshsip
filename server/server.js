@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 });
 
 // Connect to MongoDB
-const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/freshsip';
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb+srv://chandruk26062005_db_user:_Gn8qgUu6EJSF95@freshsip.vv6nn2h.mongodb.net/freshsip';
 
 let cachedConnection = null;
 
@@ -39,11 +39,12 @@ async function connectToDatabase() {
 	}
 
 	try {
+		console.log('Connecting to MongoDB:', MONGO_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
 		const connection = await mongoose.connect(MONGO_URI, {
 			serverSelectionTimeoutMS: 15000,
 			maxPoolSize: 1, // Maintain up to 1 socket connection for serverless
 		});
-		console.log('MongoDB connected');
+		console.log('MongoDB connected to:', connection.connection.db.databaseName);
 		cachedConnection = connection;
 		return connection;
 	} catch (err) {
