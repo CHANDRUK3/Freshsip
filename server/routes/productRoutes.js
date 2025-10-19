@@ -6,6 +6,8 @@ const router = express.Router();
 // GET /api/products - Get all products with filtering, sorting, and pagination
 router.get('/', async (req, res) => {
 	try {
+		console.log('Products route accessed, query params:', req.query);
+		
 		const { 
 			category, 
 			sort = 'featured', 
@@ -60,14 +62,16 @@ router.get('/', async (req, res) => {
 		const skip = (Number(page) - 1) * Number(limit);
 
 		// Get products and total count
+		console.log('Querying products with filter:', filter, 'sort:', sortObj);
 		const [products, total] = await Promise.all([
 			Product.find(filter).sort(sortObj).skip(skip).limit(Number(limit)),
 			Product.countDocuments(filter)
 		]);
 
+		console.log(`Found ${products.length} products out of ${total} total`);
 		const totalPages = Math.ceil(total / Number(limit));
 
-		res.json({
+		const responseData = {
 			products,
 			pagination: {
 				currentPage: Number(page),
@@ -76,7 +80,10 @@ router.get('/', async (req, res) => {
 				hasNext: Number(page) < totalPages,
 				hasPrev: Number(page) > 1
 			}
-		});
+		};
+		
+		console.log('Sending response with', responseData.products.length, 'products');
+		res.json(responseData);
 	} catch (err) {
 		res.status(500).json({ message: 'Server error', error: err.message });
 	}

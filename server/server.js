@@ -14,7 +14,7 @@ const app = express();
 app.use(cors({
 	origin: process.env.NODE_ENV === 'production' 
 		? ['https://freshsip-np5z.vercel.app', 'https://freshsip-jfsd.vercel.app'] // Your actual Vercel domains
-		: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173'],
+		: true, // Allow all origins in development
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization']
@@ -22,7 +22,7 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 
-// Request logging middleware
+// Request logging middleware  
 app.use((req, res, next) => {
 	console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
 	next();
@@ -54,28 +54,50 @@ async function connectToDatabase() {
 }
 
 app.get('/', (req, res) => {
+	console.log('Root endpoint accessed');
 	res.json({ status: 'ok', service: 'FreshSip API' });
+});
+
+// Add a simple test endpoint
+app.get('/test', (req, res) => {
+	console.log('Test endpoint accessed');
+	res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
 });
 
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 
-// For local development
-if (process.env.NODE_ENV !== 'production') {
+// When running on Render or local development, start the HTTP server.
+// Render sets RENDER_SERVICE_ID environment variable
+const shouldStartServer = process.env.RENDER_SERVICE_ID || // Render environment
+                         process.env.START_SERVER === 'true' || 
+                         (!process.env.NODE_ENV || process.env.NODE_ENV !== 'production');
+
+if (shouldStartServer) {
 	const PORT = process.env.PORT || 5000;
-	
 	connectToDatabase().then(() => {
-		app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+		app.listen(PORT, '0.0.0.0', () => {
+			console.log(`Server running on port ${PORT}`);
+			console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+		});
 	}).catch(err => {
 		console.error('Failed to start server:', err);
 		process.exit(1);
 	});
 }
 
-// For Vercel serverless
+// Export handler for serverless platforms (Vercel). This keeps backward compatibility.
 export default async function handler(req, res) {
-	await connectToDatabase();
+	try {
+		await connectToDatabase();
+	} catch (err) {
+		console.error('Database connection failed in serverless handler:', err);
+		res.statusCode = 500;
+		res.setHeader('Content-Type', 'application/json');
+		res.end(JSON.stringify({ error: 'Database connection failed' }));
+		return;
+	}
 	return app(req, res);
 }
 
