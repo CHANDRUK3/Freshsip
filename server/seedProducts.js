@@ -125,8 +125,10 @@ const sampleProducts = [
 
 async function seedProducts() {
 	try {
-		await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/freshsip');
-		console.log('Connected to MongoDB');
+		const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://chandruk26062005_db_user:_Gn8qgUu6EJSF95@freshsip.vv6nn2h.mongodb.net/freshsip';
+		console.log('Connecting to:', MONGO_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
+		await mongoose.connect(MONGO_URI);
+		console.log('Connected to MongoDB Atlas');
 
 		// Clear existing products
 		await Product.deleteMany({});
